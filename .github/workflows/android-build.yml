@@ -1,3 +1,4 @@
+
 name: Build Smart Overlook APK
 
 on:
@@ -27,11 +28,12 @@ jobs:
           gradle-version: "8.9"
 
       - name: Build debug APK
+        working-directory: SmartOverlook
         run: gradle --no-daemon :app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: SmartOverlook-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: SmartOverlook/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
