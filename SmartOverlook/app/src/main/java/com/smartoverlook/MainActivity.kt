@@ -51,11 +51,42 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = navy
-        window.navigationBarColor = navy
-        loadCommands()
-        buildScreen()
-        updateConnectionUi()
+        try {
+            window.statusBarColor = navy
+            window.navigationBarColor = navy
+            loadCommands()
+            buildScreen()
+            updateConnectionUi()
+        } catch (error: Throwable) {
+            android.util.Log.e("SmartOverlook", "Startup failure", error)
+            showStartupError(error)
+        }
+    }
+
+    private fun showStartupError(error: Throwable) {
+        val details = android.util.Log.getStackTraceString(error)
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(18), dp(24), dp(18), dp(24))
+            setBackgroundColor(Color.rgb(16, 27, 45))
+            layoutDirection = View.LAYOUT_DIRECTION_LTR
+        }
+        val heading = TextView(this).apply {
+            text = "Smart Overlook - Startup diagnostic"
+            textSize = 18f
+            setTextColor(Color.WHITE)
+        }
+        val message = TextView(this).apply {
+            text = "برنامه هنگام شروع با خطا روبه‌رو شد. از این صفحه عکس بگیر و بفرست:\n\n" + details
+            textSize = 12f
+            setTextColor(Color.rgb(226, 238, 250))
+            setTextIsSelectable(true)
+        }
+        val scroll = ScrollView(this)
+        scroll.addView(message)
+        root.addView(heading)
+        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        setContentView(root)
     }
 
     private fun buildScreen() {
