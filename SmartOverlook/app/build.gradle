@@ -22,3 +22,10 @@ android {
     }
     kotlinOptions { jvmTarget = '17' }
 }
+
+// Give the generated APK a recognizable filename instead of app-debug.apk.
+android.applicationVariants.all { variant ->
+    variant.outputs.all {
+        outputFileName = "SmartOverlook.apk"
+    }
+}

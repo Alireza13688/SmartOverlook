@@ -9,6 +9,8 @@ import android.bluetooth.BluetoothSocket
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
@@ -31,6 +33,9 @@ class MainActivity : Activity() {
     private val blue = Color.rgb(55, 151, 235)
     private val pale = Color.rgb(226, 238, 250)
     private val muted = Color.rgb(157, 178, 201)
+    private val cyan = Color.rgb(75, 210, 255)
+    private val green = Color.rgb(68, 220, 170)
+    private val outputButtons = arrayOfNulls<Button>(8)
 
     private var bluetoothSocket: BluetoothSocket? = null
     private var outputStream: OutputStream? = null
@@ -59,33 +64,79 @@ class MainActivity : Activity() {
             setBackgroundColor(navy)
             layoutDirection = View.LAYOUT_DIRECTION_RTL
         }
-        val scroll = ScrollView(this)
+        val scroll = ScrollView(this).apply {
+            isFillViewport = true
+            clipToPadding = false
+        }
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(18), dp(22), dp(18), dp(28))
+            setPadding(dp(18), dp(18), dp(18), dp(30))
             layoutDirection = View.LAYOUT_DIRECTION_RTL
         }
         scroll.addView(content)
         root.addView(scroll, ViewGroup.LayoutParams(-1, -1))
 
-        val header = TextView(this).apply {
-            text = "SMART OVERLOOK"
-            textSize = 25f
-            setTextColor(pale)
-            gravity = Gravity.CENTER
-            letterSpacing = 0.08f
-            setPadding(0, dp(8), 0, dp(4))
+        val brandRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
         }
-        content.addView(header)
-        content.addView(label("کنترل صوتی هوشمند آردوینو", 14f, muted, Gravity.CENTER))
-        content.addView(space(18))
+        val mark = TextView(this).apply {
+            text = "S"
+            textSize = 25f
+            typeface = Typeface.create("sans-serif-black", Typeface.NORMAL)
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            background = roundedDrawable(intArrayOf(blue, cyan), dp(18), 0)
+            layoutParams = LinearLayout.LayoutParams(dp(52), dp(52))
+        }
+        val brandText = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), 0, 0, 0)
+        }
+        brandText.addView(label("SMART OVERLOOK", 19f, pale).apply {
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            letterSpacing = 0.12f
+        })
+        brandText.addView(label("SMART HOME CONTROL", 10f, cyan).apply { letterSpacing = 0.16f })
+        brandRow.addView(mark)
+        brandRow.addView(brandText, LinearLayout.LayoutParams(0, -2, 1f))
+        brandRow.addView(label("v1.0", 11f, muted, Gravity.CENTER).apply {
+            background = roundedDrawable(intArrayOf(Color.rgb(31, 49, 73)), dp(20), dp(1), Color.rgb(53, 78, 108))
+            setPadding(dp(12), dp(7), dp(12), dp(7))
+        })
+        content.addView(brandRow)
+        content.addView(space(22))
+
+        content.addView(label("کنترل هوشمند،", 27f, pale).apply {
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        })
+        content.addView(label("ساده و دقیق.", 27f, cyan).apply {
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        })
+        content.addView(label("مدیریت تجهیزات متصل به آردوینو از یک پنل واحد", 13f, muted))
+        content.addView(space(20))
 
         val connectionCard = card()
-        connectionCard.addView(label("اتصال بلوتوث", 17f, pale))
-        statusText = label("وضعیت: متصل نیست", 14f, muted)
-        connectionCard.addView(statusText)
-        connectButton = Button(this).apply {
-            text = "انتخاب و اتصال به HC-05"
+        val connectionTop = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val connectionInfo = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        connectionInfo.addView(label("اتصال دستگاه", 17f, pale).apply {
+            typeface = Typeface.DEFAULT_BOLD
+        })
+        statusText = label("●  بلوتوث متصل نیست", 12f, muted)
+        connectionInfo.addView(statusText)
+        connectionTop.addView(connectionInfo, LinearLayout.LayoutParams(0, -2, 1f))
+        connectionTop.addView(label("BT", 13f, cyan, Gravity.CENTER).apply {
+            typeface = Typeface.DEFAULT_BOLD
+            background = roundedDrawable(intArrayOf(Color.rgb(23, 53, 79)), dp(14), dp(1), Color.rgb(48, 107, 145))
+            setPadding(dp(14), dp(10), dp(14), dp(10))
+        })
+        connectionCard.addView(connectionTop)
+        connectionCard.addView(space(12))
+        connectButton = styledButton("انتخاب و اتصال به HC-05", true).apply {
             setOnClickListener { requestBluetoothAndConnect() }
         }
         connectionCard.addView(connectButton)
@@ -93,51 +144,78 @@ class MainActivity : Activity() {
         content.addView(space(14))
 
         val voiceCard = card()
-        voiceCard.addView(label("فرمان صوتی فارسی", 17f, pale))
-        recognizedText = label("فرمان تشخیص‌داده‌شده اینجا نمایش داده می‌شود", 14f, muted)
+        voiceCard.addView(label("فرمان صوتی فارسی", 17f, pale).apply {
+            typeface = Typeface.DEFAULT_BOLD
+        })
+        voiceCard.addView(label("با گفتن عبارت‌های تعریف‌شده، تجهیزات را کنترل کن.", 12f, muted))
+        recognizedText = label("منتظر فرمان صوتی شما هستم…", 13f, cyan).apply {
+            background = roundedDrawable(intArrayOf(Color.rgb(19, 34, 54)), dp(12), dp(1), Color.rgb(44, 72, 102))
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+        }
+        voiceCard.addView(space(8))
         voiceCard.addView(recognizedText)
-        val mic = Button(this).apply {
-            text = "🎙  برای صحبت لمس کن"
-            textSize = 17f
+        voiceCard.addView(space(12))
+        val mic = styledButton("🎙   برای صحبت لمس کن", true).apply {
+            textSize = 16f
             setOnClickListener { startPersianRecognition() }
         }
         voiceCard.addView(mic)
-        voiceCard.addView(label("برای تشخیص گفتار، اینترنت و سرویس گفتار فارسی گوشی لازم است.", 12f, muted))
+        voiceCard.addView(label("برای تشخیص گفتار، اینترنت و سرویس گفتار فارسی گوشی لازم است.", 11f, muted))
         content.addView(voiceCard)
         content.addView(space(14))
 
         val outputCard = card()
-        outputCard.addView(label("کنترل دستی ۸ خروجی", 17f, pale))
+        val outputHeader = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        outputHeader.addView(label("خروجی‌های دستگاه", 17f, pale).apply {
+            typeface = Typeface.DEFAULT_BOLD
+        }, LinearLayout.LayoutParams(0, -2, 1f))
+        outputHeader.addView(label("۸ کانال", 11f, cyan).apply {
+            background = roundedDrawable(intArrayOf(Color.rgb(23, 53, 79)), dp(16), 0)
+            setPadding(dp(10), dp(5), dp(10), dp(5))
+        })
+        outputCard.addView(outputHeader)
+        outputCard.addView(label("برای تغییر وضعیت هر کانال، کارت آن را لمس کن.", 12f, muted))
+        outputCard.addView(space(8))
         val grid = GridLayout(this).apply {
             columnCount = 2
             layoutDirection = View.LAYOUT_DIRECTION_RTL
         }
         for (i in 0 until 8) {
             val button = Button(this).apply {
-                text = "خروجی ${i + 1}  •  خاموش"
+                isAllCaps = false
                 textSize = 13f
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(dp(5), dp(4), dp(5), dp(4))
+                updateOutputButton(this, i)
                 setOnClickListener {
                     val next = !outputStates[i]
                     sendPayload("OUT${i + 1}_${if (next) "ON" else "OFF"}")
                     outputStates[i] = next
-                    text = "خروجی ${i + 1}  •  ${if (next) "روشن" else "خاموش"}"
+                    updateOutputButton(this, i)
                 }
             }
+            outputButtons[i] = button
             val params = GridLayout.LayoutParams().apply {
                 width = 0
-                height = dp(58)
+                height = dp(66)
                 columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
                 setMargins(dp(4), dp(4), dp(4), dp(4))
             }
             grid.addView(button, params)
         }
         outputCard.addView(grid)
-        val allOff = Button(this).apply {
-            text = "خاموش کردن همه خروجی‌ها"
+        outputCard.addView(space(10))
+        val allOff = styledButton("خاموش کردن همه خروجی‌ها", false).apply {
             setOnClickListener {
                 sendPayload("ALL_OFF")
-                for (i in outputStates.indices) outputStates[i] = false
-                rebuildScreenOutputs()
+                for (i in outputStates.indices) {
+                    outputStates[i] = false
+                    outputButtons[i]?.let { updateOutputButton(it, i) }
+                }
+                toast("فرمان خاموشی همه خروجی‌ها ارسال شد")
             }
         }
         outputCard.addView(allOff)
@@ -145,33 +223,76 @@ class MainActivity : Activity() {
         content.addView(space(14))
 
         val commandCard = card()
-        commandCard.addView(label("مدیریت دستورات صوتی", 17f, pale))
-        commandCard.addView(label("برای هر وسیله می‌توانی عبارت فارسی دلخواه و فرمان متناظر را تعریف کنی.", 12f, muted))
+        commandCard.addView(label("شخصی‌سازی فرمان‌ها", 17f, pale).apply {
+            typeface = Typeface.DEFAULT_BOLD
+        })
+        commandCard.addView(label("عبارت‌های دلخواه فارسی را به خروجی موردنظر متصل کن.", 12f, muted))
         commandsContainer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         commandCard.addView(commandsContainer)
-        val add = Button(this).apply {
-            text = "+ افزودن دستور جدید"
+        commandCard.addView(space(8))
+        val add = styledButton("+  افزودن دستور جدید", false).apply {
             setOnClickListener { showCommandEditor(null) }
         }
         commandCard.addView(add)
         content.addView(commandCard)
 
+        content.addView(space(18))
+        content.addView(label("SMART OVERLOOK  •  ARDUINO CONTROL", 10f, Color.rgb(100, 128, 157), Gravity.CENTER).apply {
+            letterSpacing = 0.08f
+        })
+
         setContentView(root)
         renderCommands()
     }
 
-    private fun rebuildScreenOutputs() {
-        // State is also reflected in the command buttons after the next screen refresh.
-        Toast.makeText(this, "فرمان خاموشی همه خروجی‌ها ارسال شد", Toast.LENGTH_SHORT).show()
+    private fun updateOutputButton(button: Button, index: Int) {
+        val on = outputStates[index]
+        button.text = "خروجی ${index + 1}\n${if (on) "● روشن" else "○ خاموش"}"
+        button.setTextColor(if (on) Color.rgb(140, 255, 218) else pale)
+        button.background = roundedDrawable(
+            if (on) intArrayOf(Color.rgb(22, 88, 82), Color.rgb(24, 66, 76))
+            else intArrayOf(Color.rgb(34, 52, 76), Color.rgb(27, 43, 65)),
+            dp(13), dp(1), if (on) green else Color.rgb(57, 81, 111)
+        )
+    }
+
+    private fun roundedDrawable(
+        colors: IntArray,
+        radius: Int,
+        strokeWidth: Int = 0,
+        strokeColor: Int = Color.TRANSPARENT
+    ): GradientDrawable = GradientDrawable(
+        if (colors.size > 1) GradientDrawable.Orientation.TL_BR else GradientDrawable.Orientation.LEFT_RIGHT,
+        colors
+    ).apply {
+        cornerRadius = radius.toFloat()
+        if (strokeWidth > 0) setStroke(strokeWidth, strokeColor)
+    }
+
+    private fun styledButton(textValue: String, primary: Boolean): Button = Button(this).apply {
+        text = textValue
+        isAllCaps = false
+        textSize = 14f
+        typeface = Typeface.DEFAULT_BOLD
+        setTextColor(Color.WHITE)
+        background = if (primary)
+            roundedDrawable(intArrayOf(Color.rgb(37, 126, 207), Color.rgb(45, 174, 224)), dp(13))
+        else
+            roundedDrawable(intArrayOf(Color.rgb(39, 60, 86), Color.rgb(32, 49, 72)), dp(13), dp(1), Color.rgb(65, 93, 126))
+        minHeight = dp(50)
+        stateListAnimator = null
     }
 
     private fun card(): LinearLayout = LinearLayout(this).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding(dp(15), dp(14), dp(15), dp(14))
-        setBackgroundColor(panel)
+        setPadding(dp(16), dp(15), dp(16), dp(15))
+        background = roundedDrawable(intArrayOf(Color.rgb(29, 46, 69), Color.rgb(24, 39, 60)), dp(18), dp(1), Color.rgb(48, 70, 99))
         layoutDirection = View.LAYOUT_DIRECTION_RTL
-        elevation = dp(2).toFloat()
-    }.also { /* margin is applied by wrapper below */ }
+        elevation = dp(3).toFloat()
+        layoutParams = LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(2)
+        }
+    }
 
     private fun label(textValue: String, size: Float, color: Int, gravityValue: Int = Gravity.RIGHT): TextView =
         TextView(this).apply {
@@ -179,7 +300,8 @@ class MainActivity : Activity() {
             textSize = size
             setTextColor(color)
             gravity = gravityValue
-            setPadding(0, dp(5), 0, dp(5))
+            setPadding(0, dp(4), 0, dp(4))
+            textDirection = View.TEXT_DIRECTION_RTL
         }
 
     private fun space(height: Int): View = View(this).apply {
@@ -187,6 +309,13 @@ class MainActivity : Activity() {
     }
 
     private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private fun rebuildScreenOutputs() {
+        for (i in outputStates.indices) {
+            outputStates[i] = false
+            outputButtons[i]?.let { updateOutputButton(it, i) }
+        }
+    }
 
     private fun requestBluetoothAndConnect() {
         if (Build.VERSION.SDK_INT >= 31 &&
